@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Us 💖 | Our Relationship System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Cursor trail container -->
+<div class="cursor-trail" id="cursorTrail"></div>
+
+<!-- Navigation -->
+<nav class="navbar" id="navbar">
+  <div class="nav-logo">Us 💖</div>
+  <div class="nav-links">
+    <a href="#home" class="nav-link active">Home</a>
+    <a href="#memories" class="nav-link">Memories</a>
+    <a href="#notes" class="nav-link">Love Notes</a>
+    <a href="#dates" class="nav-link">Date Nights</a>
+    <a href="#playlist" class="nav-link">Our Playlist</a>
+  </div>
+  <div class="nav-toggle" id="navToggle">☰</div>
+</nav>
+
+<!-- ==================== HOME / LANDING ==================== -->
+<section id="home" class="section home active">
+  <div class="home-bg"></div>
+  <div class="home-content">
+    <div class="floating-hearts" id="floatingHearts"></div>
+
+    <div class="question-card">
+      <h1>Do you love me?</h1>
+      <p class="subtitle">Answer honestly, baby...</p>
+      <div class="btn-group">
+        <button id="yesBtn" class="btn yes">Yes ❤️</button>
+        <button id="noBtn" class="btn no">No</button>
+      </div>
+    </div>
+
+    <div id="result" class="result hidden">
+      <h2>Yay! I love you too ❤️</h2>
+      <p>Thank you for saying yes. You make every day brighter. I love you more than words can say. 💖</p>
+      <a href="#memories" class="btn yes">See our memories</a>
+    </div>
+
+    <div class="relationship-stats">
+      <div class="stat">
+        <span class="stat-number" id="daysTogether">--</span>
+        <span class="stat-label">days together</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number" id="countdown">--</span>
+        <span class="stat-label">until our next date</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MEMORIES ==================== -->
+<section id="memories" class="section">
+  <div class="container">
+    <header class="section-header">
+      <h2>Our Memories 📸</h2>
+      <p>Moments we never want to forget.</p>
+    </header>
+
+    <div class="memory-grid" id="memoryGrid">
+      <!-- Memories injected by JS -->
+    </div>
+
+    <div class="add-memory" style="text-align:center; margin-top:2rem;">
+      <button class="btn yes" id="openAddMemory">+ Add a Memory</button>
+    </div>
+
+    <!-- Add Memory Modal -->
+    <div class="modal" id="memoryModal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Add a Memory</h3>
+        <form id="addMemoryForm">
+          <input type="text" id="memTitle" placeholder="Title" required>
+          <textarea id="memDesc" placeholder="What happened?" required></textarea>
+          <input type="url" id="memPhoto" placeholder="Photo URL (optional)">
+          <input type="date" id="memDate" required>
+          <button type="submit" class="btn yes">Save Memory</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== LOVE NOTES ==================== -->
+<section id="notes" class="section">
+  <div class="container">
+    <header class="section-header">
+      <h2>Love Notes ✉️</h2>
+      <p>Little things I want you to remember.</p>
+    </header>
+
+    <div class="notes-grid" id="notesGrid">
+      <!-- Notes injected by JS -->
+    </div>
+
+    <div class="add-note" style="text-align:center; margin-top:2rem;">
+      <button class="btn yes" id="openAddNote">+ Write a Note</button>
+    </div>
+
+    <div class="modal" id="noteModal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>New Love Note</h3>
+        <form id="addNoteForm">
+          <textarea id="noteContent" placeholder="Write something sweet..." required></textarea>
+          <label style="display:flex; align-items:center; gap:0.5rem; margin-top:1rem; font-size:0.9rem;">
+            <input type="checkbox" id="notePrivate"> Private (only me)
+          </label>
+          <button type="submit" class="btn yes">Send Note</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== DATE NIGHTS ==================== -->
+<section id="dates" class="section">
+  <div class="container">
+    <header class="section-header">
+      <h2>Date Nights 🌙</h2>
+      <p>Planned and past adventures.</p>
+    </header>
+
+    <div class="dates-grid" id="datesGrid">
+      <!-- Dates injected by JS -->
+    </div>
+
+    <div class="add-date" style="text-align:center; margin-top:2rem;">
+      <button class="btn yes" id="openAddDate">+ Plan a Date</button>
+    </div>
+
+    <div class="modal" id="dateModal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Plan a Date Night</h3>
+        <form id="addDateForm">
+          <input type="text" id="dateTitle" placeholder="Date idea" required>
+          <input type="text" id="dateLocation" placeholder="Where?">
+          <input type="datetime-local" id="dateWhen" required>
+          <textarea id="dateNotes" placeholder="Notes / what to bring"></textarea>
+          <button type="submit" class="btn yes">Save Date</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== PLAYLIST ==================== -->
+<section id="playlist" class="section">
+  <div class="container">
+    <header class="section-header">
+      <h2>Our Playlist 🎵</h2>
+      <p>Songs that sound like us.</p>
+    </header>
+
+    <div class="playlist-grid" id="playlistGrid">
+      <!-- Playlist injected by JS -->
+    </div>
+
+    <div class="add-song" style="text-align:center; margin-top:2rem;">
+      <button class="btn yes" id="openAddSong">+ Add a Song</button>
+    </div>
+
+    <div class="modal" id="songModal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Add a Song</h3>
+        <form id="addSongForm">
+          <input type="text" id="songTitle" placeholder="Song title" required>
+          <input type="text" id="songArtist" placeholder="Artist" required>
+          <input type="url" id="songLink" placeholder="Spotify / YouTube link (optional)">
+          <textarea id="songWhy" placeholder="Why this song reminds you of them"></textarea>
+          <button type="submit" class="btn yes">Add Song</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Made with ❤️ for you. Built with Vercel &amp; Supabase.</p>
+</footer>
+
+<script src="js/supabase.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
