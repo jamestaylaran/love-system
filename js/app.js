@@ -91,25 +91,6 @@ const negativeThoughts = [
 let hasJumped = false;
 let lastEvade = 0;
 
-// Place the No button next to the Yes button (its intended resting spot)
-function placeNoInitial() {
-  if (hasJumped || !yesBtn.offsetParent && yesBtn.getBoundingClientRect().width === 0) return;
-  const rect = yesBtn.getBoundingClientRect();
-  const gap = 32;
-  let left = rect.right + gap;
-  let top = rect.top;
-  // Clamp inside the viewport (small screens)
-  if (left + noBtn.offsetWidth > window.innerWidth - 16) {
-    left = Math.max(16, rect.left - noBtn.offsetWidth - gap);
-  }
-  if (left < 16) left = 16;
-  if (top + noBtn.offsetHeight > window.innerHeight - 16) {
-    top = window.innerHeight - noBtn.offsetHeight - 16;
-  }
-  noBtn.style.left = left + 'px';
-  noBtn.style.top = top + 'px';
-}
-
 // Random position anywhere in the viewport, never on top of the Yes button
 function getRandomPosition(btn) {
   const pad = 16;
@@ -131,6 +112,8 @@ function getRandomPosition(btn) {
 }
 
 function evadeNoButton() {
+  // Switch out of the centered layout into jump mode, then teleport
+  noBtn.style.position = 'fixed';
   const { x, y } = getRandomPosition(noBtn);
   noBtn.style.left = x + 'px';
   noBtn.style.top = y + 'px';
@@ -244,16 +227,13 @@ setInterval(() => {
   }
 }, 700);
 
-/* ---------- Keep the No button inside the viewport ---------- */
+/* ---------- Keep the No button inside the viewport after it jumps ---------- */
 window.addEventListener('resize', () => {
-  if (!hasJumped) {
-    placeNoInitial();
-  } else {
-    const maxX = window.innerWidth - noBtn.offsetWidth - 16;
-    const maxY = window.innerHeight - noBtn.offsetHeight - 16;
-    noBtn.style.left = Math.min(Math.max(16, parseFloat(noBtn.style.left) || 16), maxX) + 'px';
-    noBtn.style.top = Math.min(Math.max(16, parseFloat(noBtn.style.top) || 16), maxY) + 'px';
-  }
+  if (!hasJumped) return; // at rest it's in the centered layout — nothing to clamp
+  const maxX = window.innerWidth - noBtn.offsetWidth - 16;
+  const maxY = window.innerHeight - noBtn.offsetHeight - 16;
+  noBtn.style.left = Math.min(Math.max(16, parseFloat(noBtn.style.left) || 16), Math.max(maxX, 16)) + 'px';
+  noBtn.style.top = Math.min(Math.max(16, parseFloat(noBtn.style.top) || 16), Math.max(maxY, 16)) + 'px';
 });
 
 /* ---------- Supabase Helpers ---------- */
@@ -495,9 +475,6 @@ function escapeHtml(text) {
 }
 
 /* ---------- Init ---------- */
-placeNoInitial();
-window.addEventListener('load', placeNoInitial);
-
 loadMemories();
 loadNotes();
 loadDates();

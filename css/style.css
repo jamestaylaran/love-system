@@ -122,12 +122,13 @@ button { font-family: inherit; }
 
 .btn.yes:active { transform: scale(0.95); }
 
-/* Evasive No button — fixed so it can jump anywhere on screen */
+/* Evasive No button — sits centered in the layout at rest,
+   switches to position:fixed the moment it starts running away */
 .btn.no {
   background: linear-gradient(135deg, #ffc0cb, #ffb6c1);
   color: var(--pink-dark);
   border: 2px solid var(--pink-dark);
-  position: fixed;
+  position: relative;
   z-index: 520;
 }
 
