@@ -2,54 +2,37 @@
 // US 💖 — Relationship System
 // ============================================================
 
-/* ---------- Custom cursor ---------- */
-const cursor = document.createElement('div');
-document.body.style.cursor = 'none';
-document.body.classList.add('cursor-active');
-
-document.addEventListener('mousemove', (e) => {
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top = e.clientY + 'px';
-});
-
-document.addEventListener('mousedown', () => {
-  cursor.style.width = '18px';
-  cursor.style.height = '18px';
-  cursor.style.background = '#ff1493';
-});
-document.addEventListener('mouseup', () => {
-  cursor.style.width = '12px';
-  cursor.style.height = '12px';
-  cursor.style.background = '#ff69b4';
-});
-
 /* ---------- Navigation ---------- */
 const navLinks = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.section');
 const navToggle = document.getElementById('navToggle');
-const navLinksMenu = document.querySelector('.nav-links');
+const navLinksMenu = document.getElementById('navLinks');
+const navbar = document.getElementById('navbar');
+const footer = document.querySelector('footer');
 
 function showSection(id) {
-  sections.forEach(s => {
-    s.classList.remove('active');
-    s.classList.add('hidden');
-  });
+  sections.forEach(s => s.classList.remove('active'));
   const target = document.getElementById(id);
-  if (target) {
-    target.classList.remove('hidden');
-    target.classList.add('active');
-  }
+  if (target) target.classList.add('active');
   navLinks.forEach(l => l.classList.remove('active'));
   const activeLink = document.querySelector(`.nav-link[href="#${id}"]`);
   if (activeLink) activeLink.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  navLinksMenu.classList.remove('open');
 }
 
 navLinks.forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
-    const id = link.getAttribute('href').replace('#', '');
-    showSection(id);
-    navLinksMenu.classList.remove('open');
+    showSection(link.getAttribute('href').replace('#', ''));
+  });
+});
+
+// Quick-link cards on the home screen
+document.querySelectorAll('[data-goto]').forEach(el => {
+  el.addEventListener('click', (e) => {
+    e.preventDefault();
+    showSection(el.dataset.goto);
   });
 });
 
@@ -61,7 +44,7 @@ navToggle.addEventListener('click', () => {
 // Change START_DATE to the day you two started dating / met
 const START_DATE = new Date('2024-01-01T00:00:00');
 const NEXT_DATE = new Date();
-NEXT_DATE.setDate(NEXT_DATE.getDate() + 30); // next date night in 30 days (example)
+NEXT_DATE.setDate(NEXT_DATE.getDate() + 30); // next date night (example)
 
 function updateStats() {
   const now = new Date();
@@ -75,9 +58,11 @@ function updateStats() {
 updateStats();
 setInterval(updateStats, 60000);
 
-/* ---------- Home: Evasive No Button + Negative Thoughts ---------- */
+/* ---------- LANDING: Evasive No Button + Negative Thoughts ---------- */
+const landing = document.getElementById('landing');
 const yesBtn = document.getElementById('yesBtn');
 const noBtn = document.getElementById('noBtn');
+const questionCard = document.querySelector('.question-card');
 const result = document.getElementById('result');
 
 const negativeThoughts = [
@@ -103,14 +88,45 @@ const negativeThoughts = [
   "please come back to me"
 ];
 
+let hasJumped = false;
+let lastEvade = 0;
+
+// Place the No button next to the Yes button (its intended resting spot)
+function placeNoInitial() {
+  if (hasJumped || !yesBtn.offsetParent && yesBtn.getBoundingClientRect().width === 0) return;
+  const rect = yesBtn.getBoundingClientRect();
+  const gap = 32;
+  let left = rect.right + gap;
+  let top = rect.top;
+  // Clamp inside the viewport (small screens)
+  if (left + noBtn.offsetWidth > window.innerWidth - 16) {
+    left = Math.max(16, rect.left - noBtn.offsetWidth - gap);
+  }
+  if (left < 16) left = 16;
+  if (top + noBtn.offsetHeight > window.innerHeight - 16) {
+    top = window.innerHeight - noBtn.offsetHeight - 16;
+  }
+  noBtn.style.left = left + 'px';
+  noBtn.style.top = top + 'px';
+}
+
+// Random position anywhere in the viewport, never on top of the Yes button
 function getRandomPosition(btn) {
-  const maxX = window.innerWidth - btn.offsetWidth - 20;
-  const maxY = window.innerHeight - btn.offsetHeight - 20;
-  let x, y;
-  do {
-    x = Math.random() * maxX;
-    y = Math.random() * maxY;
-  } while (Math.abs(x - window.innerWidth / 2) < 100 && Math.abs(y - window.innerHeight / 2) < 100);
+  const pad = 16;
+  const maxX = window.innerWidth - btn.offsetWidth - pad;
+  const maxY = window.innerHeight - btn.offsetHeight - pad;
+  const yes = yesBtn.getBoundingClientRect();
+
+  let x = pad, y = pad;
+  for (let i = 0; i < 50; i++) {
+    x = pad + Math.random() * Math.max(maxX - pad, 1);
+    y = pad + Math.random() * Math.max(maxY - pad, 1);
+    // Keep 40px away from the Yes button (and the center where Yes sits)
+    const overlaps =
+      x < yes.right + 40 && x + btn.offsetWidth > yes.left - 40 &&
+      y < yes.bottom + 40 && y + btn.offsetHeight > yes.top - 40;
+    if (!overlaps) break;
+  }
   return { x, y };
 }
 
@@ -118,6 +134,7 @@ function evadeNoButton() {
   const { x, y } = getRandomPosition(noBtn);
   noBtn.style.left = x + 'px';
   noBtn.style.top = y + 'px';
+  hasJumped = true;
 }
 
 function spawnThought() {
@@ -127,9 +144,9 @@ function spawnThought() {
   thought.textContent = text;
 
   const rect = noBtn.getBoundingClientRect();
-  let top = rect.top + rect.height + 12;
+  let top = rect.bottom + 12;
   let left = rect.left + rect.width / 2 - 90;
-  top = Math.min(Math.max(top, 10), window.innerHeight - 40);
+  top = Math.min(Math.max(top, 10), window.innerHeight - 44);
   left = Math.min(Math.max(left, 10), window.innerWidth - 220);
 
   thought.style.top = top + 'px';
@@ -145,34 +162,51 @@ function spawnThought() {
   }, 2200);
 }
 
-noBtn.addEventListener('mouseenter', () => {
+function scareNoButton() {
+  const now = Date.now();
+  if (now - lastEvade < 450) return; // throttle so thoughts don't spam
+  lastEvade = now;
   evadeNoButton();
   spawnThought();
+}
+
+// Hover / touch the No button → it runs away
+noBtn.addEventListener('mouseenter', scareNoButton);
+noBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  scareNoButton();
 });
 
-noBtn.addEventListener('mousemove', (e) => {
+// The No button flees when the cursor gets close (anywhere on screen)
+document.addEventListener('mousemove', (e) => {
+  if (landing.classList.contains('landing-hidden')) return;
   const rect = noBtn.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
   const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-  if (dist < 140) {
-    evadeNoButton();
-    spawnThought();
-  }
+  if (dist < 150) scareNoButton();
 });
 
-yesBtn.addEventListener('click', () => {
-  document.querySelector('.question-card').style.display = 'none';
-  noBtn.style.display = 'none';
-  yesBtn.style.display = 'none';
-  document.querySelectorAll('.thought').forEach(t => t.remove());
-  result.style.display = 'block';
+/* ---------- YES → celebration → home screen ---------- */
+let enteredSite = false;
+let enterTimer = null;
 
-  // Celebration hearts
-  for (let i = 0; i < 45; i++) {
-    spawnHeart(Math.random() * 100, Math.random() * 100, 1.2 + Math.random() * 2, 3 + Math.random() * 5);
-  }
-});
+function enterSite() {
+  if (enteredSite) return;
+  enteredSite = true;
+  clearTimeout(enterTimer);
+
+  landing.classList.add('landing-hidden');
+  document.body.classList.remove('landing-open');
+
+  setTimeout(() => {
+    landing.style.display = 'none';
+    document.querySelectorAll('.thought').forEach(t => t.remove());
+    navbar.classList.remove('hidden');
+    footer.classList.add('visible');
+    showSection('home');
+  }, 600);
+}
 
 function spawnHeart(left, top, size, duration) {
   const h = document.createElement('div');
@@ -182,18 +216,47 @@ function spawnHeart(left, top, size, duration) {
   h.style.top = top + 'vh';
   h.style.fontSize = size + 'rem';
   h.style.animationDuration = duration + 's';
-  document.querySelector('.floating-hearts').appendChild(h);
+  document.getElementById('floatingHearts').appendChild(h);
   setTimeout(() => h.remove(), duration * 1000);
 }
 
+yesBtn.addEventListener('click', () => {
+  questionCard.classList.add('hidden');
+  result.classList.remove('hidden');
+  hasJumped = true;
+  noBtn.style.display = 'none';
+  document.querySelectorAll('.thought').forEach(t => t.remove());
+
+  // Celebration hearts
+  for (let i = 0; i < 45; i++) {
+    spawnHeart(Math.random() * 100, Math.random() * 100, 1.2 + Math.random() * 2, 3 + Math.random() * 5);
+  }
+
+  // Proceed to the home screen (click the message to go faster)
+  enterTimer = setTimeout(enterSite, 2400);
+  result.addEventListener('click', enterSite, { once: true });
+});
+
+// Ambient hearts while on the landing page
 setInterval(() => {
-  if (document.querySelector('.question-card').style.display !== 'none') {
+  if (!enteredSite && document.querySelector('.question-card')) {
     spawnHeart(Math.random() * 100, 100, 1 + Math.random() * 2, 5 + Math.random() * 5);
   }
 }, 700);
 
+/* ---------- Keep the No button inside the viewport ---------- */
+window.addEventListener('resize', () => {
+  if (!hasJumped) {
+    placeNoInitial();
+  } else {
+    const maxX = window.innerWidth - noBtn.offsetWidth - 16;
+    const maxY = window.innerHeight - noBtn.offsetHeight - 16;
+    noBtn.style.left = Math.min(Math.max(16, parseFloat(noBtn.style.left) || 16), maxX) + 'px';
+    noBtn.style.top = Math.min(Math.max(16, parseFloat(noBtn.style.top) || 16), maxY) + 'px';
+  }
+});
+
 /* ---------- Supabase Helpers ---------- */
-// Tables: memories, notes, dates, songs
 async function fetchTable(table) {
   if (!supabase) return [];
   const { data, error } = await supabase.from(table).select('*').order('created_at', { ascending: false });
@@ -231,21 +294,23 @@ async function loadMemories() {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
-      ${m.photo_url ? `<img src="${m.photo_url}" style="width:100%;border-radius:12px;margin-bottom:0.75rem;">` : ''}
+      ${m.photo_url ? `<img src="${escapeHtml(m.photo_url)}" alt="memory" style="width:100%;border-radius:12px;margin-bottom:0.75rem;">` : ''}
       <h3>${escapeHtml(m.title)}</h3>
       <p>${escapeHtml(m.description)}</p>
       <small>📅 ${new Date(m.memory_date).toLocaleDateString()}</small>
-      <button class="btn yes" style="margin-top:1rem;padding:0.5rem 1rem;font-size:0.85rem;" onclick="deleteMemory('${m.id}')">Delete</button>
+      <button class="btn yes" style="margin-top:1rem;padding:0.5rem 1rem;font-size:0.85rem;" data-del-memory="${m.id}">Delete</button>
     `;
     memGrid.appendChild(card);
   });
 }
 
-window.deleteMemory = async (id) => {
-  if (!confirm('Delete this memory?')) return;
-  await deleteRow('memories', id);
-  loadMemories();
-};
+memGrid.addEventListener('click', async (e) => {
+  const id = e.target.dataset.delMemory;
+  if (id && confirm('Delete this memory?')) {
+    await deleteRow('memories', id);
+    loadMemories();
+  }
+});
 
 addMemBtn.addEventListener('click', () => memModal.classList.add('open'));
 memClose.addEventListener('click', () => memModal.classList.remove('open'));
@@ -283,20 +348,22 @@ async function loadNotes() {
     card.className = 'card';
     card.innerHTML = `
       <h3>💌</h3>
-      <p style="font-style:italic;">“${escapeHtml(n.content)}”</p>
+      <p style="font-style:italic;">&ldquo;${escapeHtml(n.content)}&rdquo;</p>
       ${n.is_private ? '<small>🔒 Private note</small>' : ''}
       <small>📅 ${new Date(n.created_at).toLocaleDateString()}</small>
-      <button class="btn yes" style="margin-top:1rem;padding:0.5rem 1rem;font-size:0.85rem;" onclick="deleteNote('${n.id}')">Delete</button>
+      <button class="btn yes" style="margin-top:1rem;padding:0.5rem 1rem;font-size:0.85rem;" data-del-note="${n.id}">Delete</button>
     `;
     noteGrid.appendChild(card);
   });
 }
 
-window.deleteNote = async (id) => {
-  if (!confirm('Delete this note?')) return;
-  await deleteRow('love_notes', id);
-  loadNotes();
-};
+noteGrid.addEventListener('click', async (e) => {
+  const id = e.target.dataset.delNote;
+  if (id && confirm('Delete this note?')) {
+    await deleteRow('love_notes', id);
+    loadNotes();
+  }
+});
 
 addNoteBtn.addEventListener('click', () => noteModal.classList.add('open'));
 noteClose.addEventListener('click', () => noteModal.classList.remove('open'));
@@ -335,17 +402,19 @@ async function loadDates() {
       ${d.location ? `<p>📍 ${escapeHtml(d.location)}</p>` : ''}
       <p>📅 ${new Date(d.date_time).toLocaleString()}</p>
       ${d.notes ? `<p>${escapeHtml(d.notes)}</p>` : ''}
-      <button class="btn yes" style="margin-top:1rem;padding:0.5rem 1rem;font-size:0.85rem;" onclick="deleteDate('${d.id}')">Delete</button>
+      <button class="btn yes" style="margin-top:1rem;padding:0.5rem 1rem;font-size:0.85rem;" data-del-date="${d.id}">Delete</button>
     `;
     dateGrid.appendChild(card);
   });
 }
 
-window.deleteDate = async (id) => {
-  if (!confirm('Delete this date?')) return;
-  await deleteRow('dates', id);
-  loadDates();
-};
+dateGrid.addEventListener('click', async (e) => {
+  const id = e.target.dataset.delDate;
+  if (id && confirm('Delete this date?')) {
+    await deleteRow('dates', id);
+    loadDates();
+  }
+});
 
 addDateBtn.addEventListener('click', () => dateModal.classList.add('open'));
 dateClose.addEventListener('click', () => dateModal.classList.remove('open'));
@@ -384,19 +453,21 @@ async function loadSongs() {
     card.innerHTML = `
       <h3>${escapeHtml(s.title)}</h3>
       <p>${escapeHtml(s.artist)}</p>
-      ${s.song_link ? `<a href="${escapeHtml(s.song_link)}" target="_blank" class="btn yes" style="display:inline-block;padding:0.5rem 1rem;font-size:0.85rem;margin-top:0.75rem;">Listen</a>` : ''}
-      ${s.why_song ? `<p style="font-size:0.85rem; margin-top:0.5rem; color:var(--text-light);">“${escapeHtml(s.why_song)}”</p>` : ''}
-      <button class="btn yes" style="margin-top:1rem;padding:0.5rem 1rem;font-size:0.85rem;" onclick="deleteSong('${s.id}')">Delete</button>
+      ${s.song_link ? `<a href="${escapeHtml(s.song_link)}" target="_blank" rel="noopener" class="btn yes" style="display:inline-block;padding:0.5rem 1rem;font-size:0.85rem;margin-top:0.75rem;">Listen</a>` : ''}
+      ${s.why_song ? `<p style="font-size:0.85rem; margin-top:0.5rem; color:var(--text-light);">&ldquo;${escapeHtml(s.why_song)}&rdquo;</p>` : ''}
+      <button class="btn yes" style="margin-top:1rem;padding:0.5rem 1rem;font-size:0.85rem;" data-del-song="${s.id}">Delete</button>
     `;
     songGrid.appendChild(card);
   });
 }
 
-window.deleteSong = async (id) => {
-  if (!confirm('Delete this song?')) return;
-  await deleteRow('songs', id);
-  loadSongs();
-};
+songGrid.addEventListener('click', async (e) => {
+  const id = e.target.dataset.delSong;
+  if (id && confirm('Delete this song?')) {
+    await deleteRow('songs', id);
+    loadSongs();
+  }
+});
 
 addSongBtn.addEventListener('click', () => songModal.classList.add('open'));
 songClose.addEventListener('click', () => songModal.classList.remove('open'));
@@ -424,6 +495,9 @@ function escapeHtml(text) {
 }
 
 /* ---------- Init ---------- */
+placeNoInitial();
+window.addEventListener('load', placeNoInitial);
+
 loadMemories();
 loadNotes();
 loadDates();

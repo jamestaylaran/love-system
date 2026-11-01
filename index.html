@@ -9,15 +9,32 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="landing-open">
 
-<!-- Cursor trail container -->
-<div class="cursor-trail" id="cursorTrail"></div>
+<!-- ==================== LANDING PAGE (Yes / No question) ==================== -->
+<section id="landing">
+  <div class="floating-hearts" id="floatingHearts"></div>
 
-<!-- Navigation -->
-<nav class="navbar" id="navbar">
+  <div class="question-card">
+    <h1>Do you love me?</h1>
+    <p class="subtitle">Answer honestly, baby...</p>
+    <div class="btn-group">
+      <button id="yesBtn" class="btn yes">Yes ❤️</button>
+      <button id="noBtn" class="btn no">No</button>
+    </div>
+  </div>
+
+  <div id="result" class="result hidden">
+    <h2>Yay! I love you too ❤️</h2>
+    <p>Thank you for saying yes. You make every day brighter. I love you more than words can say. 💖</p>
+    <p class="enter-hint">Taking you to our home screen...</p>
+  </div>
+</section>
+
+<!-- ==================== NAVIGATION (appears after Yes) ==================== -->
+<nav class="navbar hidden" id="navbar">
   <div class="nav-logo">Us 💖</div>
-  <div class="nav-links">
+  <div class="nav-links" id="navLinks">
     <a href="#home" class="nav-link active">Home</a>
     <a href="#memories" class="nav-link">Memories</a>
     <a href="#notes" class="nav-link">Love Notes</a>
@@ -27,26 +44,13 @@
   <div class="nav-toggle" id="navToggle">☰</div>
 </nav>
 
-<!-- ==================== HOME / LANDING ==================== -->
-<section id="home" class="section home active">
-  <div class="home-bg"></div>
-  <div class="home-content">
-    <div class="floating-hearts" id="floatingHearts"></div>
-
-    <div class="question-card">
-      <h1>Do you love me?</h1>
-      <p class="subtitle">Answer honestly, baby...</p>
-      <div class="btn-group">
-        <button id="yesBtn" class="btn yes">Yes ❤️</button>
-        <button id="noBtn" class="btn no">No</button>
-      </div>
-    </div>
-
-    <div id="result" class="result hidden">
-      <h2>Yay! I love you too ❤️</h2>
-      <p>Thank you for saying yes. You make every day brighter. I love you more than words can say. 💖</p>
-      <a href="#memories" class="btn yes">See our memories</a>
-    </div>
+<!-- ==================== HOME SCREEN ==================== -->
+<section id="home" class="section">
+  <div class="container">
+    <header class="section-header">
+      <h2>Welcome to our world 💖</h2>
+      <p>Our little home — every memory, note, date and song lives here.</p>
+    </header>
 
     <div class="relationship-stats">
       <div class="stat">
@@ -57,6 +61,25 @@
         <span class="stat-number" id="countdown">--</span>
         <span class="stat-label">until our next date</span>
       </div>
+    </div>
+
+    <div class="home-links">
+      <a href="#memories" data-goto="memories" class="card link-card">
+        <h3>📸 Memories</h3>
+        <p>The moments we never want to forget.</p>
+      </a>
+      <a href="#notes" data-goto="notes" class="card link-card">
+        <h3>✉️ Love Notes</h3>
+        <p>Little things I want you to remember.</p>
+      </a>
+      <a href="#dates" data-goto="dates" class="card link-card">
+        <h3>🌙 Date Nights</h3>
+        <p>Planned and past adventures together.</p>
+      </a>
+      <a href="#playlist" data-goto="playlist" class="card link-card">
+        <h3>🎵 Our Playlist</h3>
+        <p>Songs that sound like us.</p>
+      </a>
     </div>
   </div>
 </section>
