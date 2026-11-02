@@ -276,21 +276,107 @@ window.addEventListener('resize', () => {
   noBtn.style.top = Math.min(Math.max(16, parseFloat(noBtn.style.top) || 16), Math.max(maxY, 16)) + 'px';
 });
 
-/* ---------- Supabase Helpers ---------- */
+/* ---------- Storage layer: Supabase + instant local fallback ---------- */
+const LS_KEY = 'love-system-v1';
+
+function getLocal(table) {
+  try {
+    const db = JSON.parse(localStorage.getItem(LS_KEY)) || {};
+    return Array.isArray(db[table]) ? db[table] : [];
+  } catch { return []; }
+}
+
+function saveLocal(table, rows) {
+  try {
+    const db = JSON.parse(localStorage.getItem(LS_KEY)) || {};
+    db[table] = rows;
+    localStorage.setItem(LS_KEY, JSON.stringify(db));
+    return true;
+  } catch (e) {
+    console.error(e);
+    if (e && e.name === 'QuotaExceededError') {
+      toast('⚠️ Device storage is full — remove some photos first');
+    }
+    return false;
+  }
+}
+
+function byNewest(a, b) {
+  return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+}
+
+function newId() {
+  return (window.crypto && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+}
+
+function toast(message) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = message;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 400);
+  }, 2600);
+}
+
 async function fetchTable(table) {
-  if (!supabase) return [];
+  const local = getLocal(table);
+
+  // Supabase not connected yet → instant local data
+  if (!supabase) return local.slice().sort(byNewest);
+
   const { data, error } = await supabase.from(table).select('*').order('created_at', { ascending: false });
-  if (error) { console.error(error); return []; }
-  return data || [];
+  if (error) {
+    console.error(error);
+    return local.slice().sort(byNewest);
+  }
+
+  const remote = data || [];
+  // Sync up anything saved locally before Supabase was connected
+  const remoteIds = new Set(remote.map(r => r.id));
+  for (const row of local) {
+    if (!remoteIds.has(row.id)) {
+      await supabase.from(table).insert([row]).catch(() => {});
+      remote.push(row);
+    }
+  }
+  const merged = remote.sort(byNewest);
+  saveLocal(table, merged);
+  return merged;
 }
 
 async function insertRow(table, row) {
-  if (!supabase) return;
-  const { error } = await supabase.from(table).insert([row]);
-  if (error) { console.error(error); alert('Failed to save. Check your Supabase config.'); }
+  const full = {
+    id: newId(),
+    created_at: new Date().toISOString(),
+    ...row
+  };
+
+  // Save locally first — instant feedback, works offline
+  const rows = getLocal(table);
+  rows.unshift(full);
+  saveLocal(table, rows);
+
+  if (!supabase) {
+    toast('Sent 💖');
+    return;
+  }
+
+  const { error } = await supabase.from(table).insert([full]);
+  if (error) {
+    console.error(error);
+    toast('Saved on this device — cloud sync will retry');
+  } else {
+    toast('Sent 💖');
+  }
 }
 
 async function deleteRow(table, id) {
+  saveLocal(table, getLocal(table).filter(r => r.id !== id));
   if (!supabase) return;
   const { error } = await supabase.from(table).delete().eq('id', id);
   if (error) console.error(error);
@@ -332,19 +418,103 @@ memGrid.addEventListener('click', async (e) => {
   }
 });
 
+/* ---------- Photo upload: pick from files → compress → preview ---------- */
+const memPhotoInput = document.getElementById('memPhoto');
+const uploadZone = document.getElementById('uploadZone');
+const uploadIdle = document.getElementById('uploadIdle');
+const uploadPreview = document.getElementById('uploadPreview');
+const uploadImg = document.getElementById('uploadImg');
+const uploadRemove = document.getElementById('uploadRemove');
+let pendingPhoto = null;
+
+function resetPhotoUpload() {
+  pendingPhoto = null;
+  memPhotoInput.value = '';
+  uploadImg.removeAttribute('src');
+  uploadPreview.classList.add('hidden');
+  uploadIdle.classList.remove('hidden');
+}
+
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const max = 1280;
+      let width = img.width;
+      let height = img.height;
+      if (width > max || height > max) {
+        const scale = Math.min(max / width, max / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not read image'));
+    };
+    img.src = url;
+  });
+}
+
+uploadZone.addEventListener('click', (e) => {
+  if (e.target === uploadRemove || e.target === memPhotoInput) return;
+  memPhotoInput.click();
+});
+
+uploadRemove.addEventListener('click', (e) => {
+  e.stopPropagation();
+  resetPhotoUpload();
+});
+
+memPhotoInput.addEventListener('change', async () => {
+  const file = memPhotoInput.files && memPhotoInput.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    toast('Please choose an image file');
+    resetPhotoUpload();
+    return;
+  }
+  try {
+    pendingPhoto = await compressImage(file);
+    uploadImg.src = pendingPhoto;
+    uploadIdle.classList.add('hidden');
+    uploadPreview.classList.remove('hidden');
+  } catch (err) {
+    console.error(err);
+    toast('Could not read that image 😥');
+    resetPhotoUpload();
+  }
+});
+
 addMemBtn.addEventListener('click', () => memModal.classList.add('open'));
-memClose.addEventListener('click', () => memModal.classList.remove('open'));
-window.addEventListener('click', (e) => { if (e.target === memModal) memModal.classList.remove('open'); });
+memClose.addEventListener('click', () => {
+  memModal.classList.remove('open');
+  resetPhotoUpload();
+});
+window.addEventListener('click', (e) => {
+  if (e.target === memModal) {
+    memModal.classList.remove('open');
+    resetPhotoUpload();
+  }
+});
 
 memForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   await insertRow('memories', {
     title: document.getElementById('memTitle').value,
     description: document.getElementById('memDesc').value,
-    photo_url: document.getElementById('memPhoto').value || null,
+    photo_url: pendingPhoto || null,
     memory_date: document.getElementById('memDate').value
   });
   memForm.reset();
+  resetPhotoUpload();
   memModal.classList.remove('open');
   loadMemories();
 });

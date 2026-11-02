@@ -129,7 +129,18 @@
         <form id="addMemoryForm">
           <input type="text" id="memTitle" placeholder="Title" required>
           <textarea id="memDesc" placeholder="What happened?" required></textarea>
-          <input type="url" id="memPhoto" placeholder="Photo URL (optional)">
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="memPhoto" accept="image/*" hidden>
+            <div class="upload-idle" id="uploadIdle">
+              <span class="upload-icon">📷</span>
+              <span class="upload-label">Tap to upload a photo</span>
+              <span class="upload-hint">Choose from your files · JPG or PNG</span>
+            </div>
+            <div class="upload-preview hidden" id="uploadPreview">
+              <img id="uploadImg" alt="Photo preview">
+              <button type="button" class="upload-remove" id="uploadRemove" aria-label="Remove photo">✕</button>
+            </div>
+          </div>
           <input type="date" id="memDate" required>
           <button type="submit" class="btn yes wide">Save Memory</button>
         </form>
