@@ -323,30 +323,45 @@ function toast(message) {
   }, 2600);
 }
 
+// Safe cloud accessor — the app keeps working even if the
+// Supabase script fails to load (falls back to local storage).
+function getCloud() {
+  try {
+    return (typeof supabase !== 'undefined' && supabase) ? supabase : null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchTable(table) {
   const local = getLocal(table);
+  const cloud = getCloud();
 
   // Supabase not connected yet → instant local data
-  if (!supabase) return local.slice().sort(byNewest);
+  if (!cloud) return local.slice().sort(byNewest);
 
-  const { data, error } = await supabase.from(table).select('*').order('created_at', { ascending: false });
-  if (error) {
-    console.error(error);
+  try {
+    const { data, error } = await cloud.from(table).select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error(error);
+      return local.slice().sort(byNewest);
+    }
+    const remote = data || [];
+    // Sync up anything saved locally before Supabase was connected
+    const remoteIds = new Set(remote.map(r => r.id));
+    for (const row of local) {
+      if (!remoteIds.has(row.id)) {
+        try { await cloud.from(table).insert([row]); } catch {}
+        remote.push(row);
+      }
+    }
+    const merged = remote.sort(byNewest);
+    saveLocal(table, merged);
+    return merged;
+  } catch (e) {
+    console.error(e);
     return local.slice().sort(byNewest);
   }
-
-  const remote = data || [];
-  // Sync up anything saved locally before Supabase was connected
-  const remoteIds = new Set(remote.map(r => r.id));
-  for (const row of local) {
-    if (!remoteIds.has(row.id)) {
-      await supabase.from(table).insert([row]).catch(() => {});
-      remote.push(row);
-    }
-  }
-  const merged = remote.sort(byNewest);
-  saveLocal(table, merged);
-  return merged;
 }
 
 async function insertRow(table, row) {
@@ -361,25 +376,36 @@ async function insertRow(table, row) {
   rows.unshift(full);
   saveLocal(table, rows);
 
-  if (!supabase) {
+  const cloud = getCloud();
+  if (!cloud) {
     toast('Sent 💖');
     return;
   }
 
-  const { error } = await supabase.from(table).insert([full]);
-  if (error) {
-    console.error(error);
+  try {
+    const { error } = await cloud.from(table).insert([full]);
+    if (error) {
+      console.error(error);
+      toast('Saved on this device — cloud sync will retry');
+    } else {
+      toast('Sent 💖');
+    }
+  } catch (e) {
+    console.error(e);
     toast('Saved on this device — cloud sync will retry');
-  } else {
-    toast('Sent 💖');
   }
 }
 
 async function deleteRow(table, id) {
   saveLocal(table, getLocal(table).filter(r => r.id !== id));
-  if (!supabase) return;
-  const { error } = await supabase.from(table).delete().eq('id', id);
-  if (error) console.error(error);
+  const cloud = getCloud();
+  if (!cloud) return;
+  try {
+    const { error } = await cloud.from(table).delete().eq('id', id);
+    if (error) console.error(error);
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 /* ---------- Memories ---------- */
