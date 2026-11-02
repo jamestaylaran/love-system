@@ -126,7 +126,7 @@
       <div class="modal-content">
         <span class="close">&times;</span>
         <h3>Add a Memory</h3>
-        <form id="addMemoryForm">
+        <form id="addMemoryForm" novalidate>
           <input type="text" id="memTitle" placeholder="Title" required>
           <textarea id="memDesc" placeholder="What happened?" required></textarea>
           <div class="upload-zone" id="uploadZone">
@@ -170,7 +170,7 @@
       <div class="modal-content">
         <span class="close">&times;</span>
         <h3>New Love Note</h3>
-        <form id="addNoteForm">
+        <form id="addNoteForm" novalidate>
           <textarea id="noteContent" placeholder="Write something sweet..." required></textarea>
           <label class="check-label">
             <input type="checkbox" id="notePrivate"> Private (only me)
@@ -203,7 +203,7 @@
       <div class="modal-content">
         <span class="close">&times;</span>
         <h3>Plan a Date Night</h3>
-        <form id="addDateForm">
+        <form id="addDateForm" novalidate>
           <input type="text" id="dateTitle" placeholder="Date idea" required>
           <input type="text" id="dateLocation" placeholder="Where?">
           <input type="datetime-local" id="dateWhen" required>
@@ -236,7 +236,7 @@
       <div class="modal-content">
         <span class="close">&times;</span>
         <h3>Add a Song</h3>
-        <form id="addSongForm">
+        <form id="addSongForm" novalidate>
           <input type="text" id="songTitle" placeholder="Song title" required>
           <input type="text" id="songArtist" placeholder="Artist" required>
           <input type="url" id="songLink" placeholder="Spotify / YouTube link (optional)">

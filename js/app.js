@@ -294,9 +294,6 @@ function saveLocal(table, rows) {
     return true;
   } catch (e) {
     console.error(e);
-    if (e && e.name === 'QuotaExceededError') {
-      toast('⚠️ Device storage is full — remove some photos first');
-    }
     return false;
   }
 }
@@ -374,30 +371,36 @@ async function insertRow(table, row) {
   // Save locally first — instant feedback, works offline
   const rows = getLocal(table);
   rows.unshift(full);
-  saveLocal(table, rows);
+  const saved = saveLocal(table, rows);
 
   const cloud = getCloud();
   if (!cloud) {
-    toast('Sent 💖');
-    return;
+    toast(saved ? 'Sent 💖' : '⚠️ Device storage is full — delete an old photo first 😥');
+    return saved;
   }
 
   try {
     const { error } = await cloud.from(table).insert([full]);
     if (error) {
       console.error(error);
-      toast('Saved on this device — cloud sync will retry');
-    } else {
-      toast('Sent 💖');
+      toast(saved ? 'Saved on this device — cloud sync will retry' : '⚠️ Could not save that 😥');
+      return saved;
     }
+    toast('Sent 💖');
+    return true;
   } catch (e) {
     console.error(e);
-    toast('Saved on this device — cloud sync will retry');
+    toast(saved ? 'Saved on this device — cloud sync will retry' : '⚠️ Could not save that 😥');
+    return saved;
   }
 }
 
 async function deleteRow(table, id) {
-  saveLocal(table, getLocal(table).filter(r => r.id !== id));
+  const ok = saveLocal(table, getLocal(table).filter(r => r.id !== id));
+  if (!ok) {
+    toast('⚠️ Device storage is full — could not delete 😥');
+    return;
+  }
   const cloud = getCloud();
   if (!cloud) return;
   try {
@@ -519,7 +522,11 @@ memPhotoInput.addEventListener('change', async () => {
   }
 });
 
-addMemBtn.addEventListener('click', () => memModal.classList.add('open'));
+addMemBtn.addEventListener('click', () => {
+  memModal.classList.add('open');
+  const d = document.getElementById('memDate');
+  if (!d.value) d.value = todayStr();
+});
 memClose.addEventListener('click', () => {
   memModal.classList.remove('open');
   resetPhotoUpload();
@@ -533,12 +540,18 @@ window.addEventListener('click', (e) => {
 
 memForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  await insertRow('memories', {
+  if (!requireFields([
+    ['memTitle', 'Give your memory a title first 🥺'],
+    ['memDesc', 'Add a little description 🥰'],
+    ['memDate', 'Pick a date for this memory 📅']
+  ])) return;
+  const ok = await insertRow('memories', {
     title: document.getElementById('memTitle').value,
     description: document.getElementById('memDesc').value,
     photo_url: pendingPhoto || null,
     memory_date: document.getElementById('memDate').value
   });
+  if (!ok) return;
   memForm.reset();
   resetPhotoUpload();
   memModal.classList.remove('open');
@@ -587,10 +600,12 @@ window.addEventListener('click', (e) => { if (e.target === noteModal) noteModal.
 
 noteForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  await insertRow('love_notes', {
+  if (!requireFields([['noteContent', 'Write something sweet first 🥺']])) return;
+  const ok = await insertRow('love_notes', {
     content: document.getElementById('noteContent').value,
     is_private: document.getElementById('notePrivate').checked
   });
+  if (!ok) return;
   noteForm.reset();
   noteModal.classList.remove('open');
   loadNotes();
@@ -632,18 +647,27 @@ dateGrid.addEventListener('click', async (e) => {
   }
 });
 
-addDateBtn.addEventListener('click', () => dateModal.classList.add('open'));
+addDateBtn.addEventListener('click', () => {
+  dateModal.classList.add('open');
+  const w = document.getElementById('dateWhen');
+  if (!w.value) w.value = todayStr() + 'T19:00';
+});
 dateClose.addEventListener('click', () => dateModal.classList.remove('open'));
 window.addEventListener('click', (e) => { if (e.target === dateModal) dateModal.classList.remove('open'); });
 
 dateForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  await insertRow('dates', {
+  if (!requireFields([
+    ['dateTitle', 'Give your date a name 🌙'],
+    ['dateWhen', 'When is it? 📅']
+  ])) return;
+  const ok = await insertRow('dates', {
     title: document.getElementById('dateTitle').value,
     location: document.getElementById('dateLocation').value || null,
     date_time: document.getElementById('dateWhen').value,
     notes: document.getElementById('dateNotes').value || null
   });
+  if (!ok) return;
   dateForm.reset();
   dateModal.classList.remove('open');
   loadDates();
@@ -691,12 +715,22 @@ window.addEventListener('click', (e) => { if (e.target === songModal) songModal.
 
 songForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  await insertRow('songs', {
+  if (!requireFields([
+    ['songTitle', "What's the song called? 🎵"],
+    ['songArtist', 'Who sings it? 🎤']
+  ])) return;
+  // Tolerate links typed without https:// (native url validation is off)
+  const linkEl = document.getElementById('songLink');
+  if (linkEl.value && !/^https?:\/\//i.test(linkEl.value.trim())) {
+    linkEl.value = 'https://' + linkEl.value.trim();
+  }
+  const ok = await insertRow('songs', {
     title: document.getElementById('songTitle').value,
     artist: document.getElementById('songArtist').value,
     song_link: document.getElementById('songLink').value || null,
     why_song: document.getElementById('songWhy').value || null
   });
+  if (!ok) return;
   songForm.reset();
   songModal.classList.remove('open');
   loadSongs();
@@ -708,6 +742,26 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+// Visible validation — replaces the browser's easy-to-miss native bubbles
+// with a clear toast + focused field, so a click never "does nothing".
+function requireFields(checks) {
+  for (const [id, msg] of checks) {
+    const el = document.getElementById(id);
+    if (!el || !String(el.value || '').trim()) {
+      toast(msg);
+      if (el && el.focus) el.focus();
+      return false;
+    }
+  }
+  return true;
+}
+
+function todayStr() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 }
 
 /* ---------- Init ---------- */
