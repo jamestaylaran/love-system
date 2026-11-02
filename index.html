@@ -3,21 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Us 💖 | Our Relationship System</title>
+<title>Us 💖 | Our Love System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="landing-open">
 
 <!-- ==================== LANDING PAGE (Yes / No question) ==================== -->
 <section id="landing">
+  <div class="aurora aurora-1"></div>
+  <div class="aurora aurora-2"></div>
+  <div class="aurora aurora-3"></div>
   <div class="floating-hearts" id="floatingHearts"></div>
 
   <div class="question-card">
+    <span class="eyebrow">just one question</span>
     <h1>Do you love me?</h1>
-    <p class="subtitle">Answer honestly, baby...</p>
+    <p class="subtitle">Answer honestly, baby&hellip;</p>
     <div class="btn-group">
       <button id="yesBtn" class="btn yes">Yes ❤️</button>
       <button id="noBtn" class="btn no">No</button>
@@ -25,21 +29,24 @@
   </div>
 
   <div id="result" class="result hidden">
-    <h2>Yay! I love you too ❤️</h2>
-    <p>Thank you for saying yes. You make every day brighter. I love you more than words can say. 💖</p>
-    <p class="enter-hint">Taking you to our home screen...</p>
+    <div class="result-card">
+      <div class="result-emoji">🫶</div>
+      <h2>Yay! I love you too</h2>
+      <p>Thank you for saying yes. You make every day brighter — I love you more than words can say.</p>
+      <p class="enter-hint">Taking you to our home screen&hellip;</p>
+    </div>
   </div>
 </section>
 
 <!-- ==================== NAVIGATION (appears after Yes) ==================== -->
 <nav class="navbar hidden" id="navbar">
-  <div class="nav-logo">Us 💖</div>
+  <div class="nav-logo">Us <span class="logo-heart">💖</span></div>
   <div class="nav-links" id="navLinks">
     <a href="#home" class="nav-link active">Home</a>
     <a href="#memories" class="nav-link">Memories</a>
     <a href="#notes" class="nav-link">Love Notes</a>
     <a href="#dates" class="nav-link">Date Nights</a>
-    <a href="#playlist" class="nav-link">Our Playlist</a>
+    <a href="#playlist" class="nav-link">Playlist</a>
   </div>
   <div class="nav-toggle" id="navToggle">☰</div>
 </nav>
@@ -48,8 +55,9 @@
 <section id="home" class="section">
   <div class="container">
     <header class="section-header">
-      <h2>Welcome to our world 💖</h2>
-      <p>Our little home — every memory, note, date and song lives here.</p>
+      <span class="eyebrow">our home 💖</span>
+      <h2>Welcome to our world</h2>
+      <p>Every memory, note, date and song we share lives right here.</p>
     </header>
 
     <div class="relationship-stats">
@@ -61,24 +69,36 @@
         <span class="stat-number" id="countdown">--</span>
         <span class="stat-label">until our next date</span>
       </div>
+      <div class="stat">
+        <span class="stat-number">∞</span>
+        <span class="stat-label">reasons I love you</span>
+      </div>
     </div>
 
     <div class="home-links">
       <a href="#memories" data-goto="memories" class="card link-card">
-        <h3>📸 Memories</h3>
+        <span class="tile-icon">📸</span>
+        <h3>Memories</h3>
         <p>The moments we never want to forget.</p>
+        <span class="tile-arrow">→</span>
       </a>
       <a href="#notes" data-goto="notes" class="card link-card">
-        <h3>✉️ Love Notes</h3>
+        <span class="tile-icon">✉️</span>
+        <h3>Love Notes</h3>
         <p>Little things I want you to remember.</p>
+        <span class="tile-arrow">→</span>
       </a>
       <a href="#dates" data-goto="dates" class="card link-card">
-        <h3>🌙 Date Nights</h3>
+        <span class="tile-icon">🌙</span>
+        <h3>Date Nights</h3>
         <p>Planned and past adventures together.</p>
+        <span class="tile-arrow">→</span>
       </a>
       <a href="#playlist" data-goto="playlist" class="card link-card">
-        <h3>🎵 Our Playlist</h3>
+        <span class="tile-icon">🎧</span>
+        <h3>Our Playlist</h3>
         <p>Songs that sound like us.</p>
+        <span class="tile-arrow">→</span>
       </a>
     </div>
   </div>
@@ -88,7 +108,8 @@
 <section id="memories" class="section">
   <div class="container">
     <header class="section-header">
-      <h2>Our Memories 📸</h2>
+      <span class="eyebrow">gallery 📸</span>
+      <h2>Our Memories</h2>
       <p>Moments we never want to forget.</p>
     </header>
 
@@ -96,7 +117,7 @@
       <!-- Memories injected by JS -->
     </div>
 
-    <div class="add-memory" style="text-align:center; margin-top:2rem;">
+    <div class="section-cta">
       <button class="btn yes" id="openAddMemory">+ Add a Memory</button>
     </div>
 
@@ -110,7 +131,7 @@
           <textarea id="memDesc" placeholder="What happened?" required></textarea>
           <input type="url" id="memPhoto" placeholder="Photo URL (optional)">
           <input type="date" id="memDate" required>
-          <button type="submit" class="btn yes">Save Memory</button>
+          <button type="submit" class="btn yes wide">Save Memory</button>
         </form>
       </div>
     </div>
@@ -121,7 +142,8 @@
 <section id="notes" class="section">
   <div class="container">
     <header class="section-header">
-      <h2>Love Notes ✉️</h2>
+      <span class="eyebrow">letters ✉️</span>
+      <h2>Love Notes</h2>
       <p>Little things I want you to remember.</p>
     </header>
 
@@ -129,7 +151,7 @@
       <!-- Notes injected by JS -->
     </div>
 
-    <div class="add-note" style="text-align:center; margin-top:2rem;">
+    <div class="section-cta">
       <button class="btn yes" id="openAddNote">+ Write a Note</button>
     </div>
 
@@ -139,10 +161,10 @@
         <h3>New Love Note</h3>
         <form id="addNoteForm">
           <textarea id="noteContent" placeholder="Write something sweet..." required></textarea>
-          <label style="display:flex; align-items:center; gap:0.5rem; margin-top:1rem; font-size:0.9rem;">
+          <label class="check-label">
             <input type="checkbox" id="notePrivate"> Private (only me)
           </label>
-          <button type="submit" class="btn yes">Send Note</button>
+          <button type="submit" class="btn yes wide">Send Note</button>
         </form>
       </div>
     </div>
@@ -153,7 +175,8 @@
 <section id="dates" class="section">
   <div class="container">
     <header class="section-header">
-      <h2>Date Nights 🌙</h2>
+      <span class="eyebrow">planning 🌙</span>
+      <h2>Date Nights</h2>
       <p>Planned and past adventures.</p>
     </header>
 
@@ -161,7 +184,7 @@
       <!-- Dates injected by JS -->
     </div>
 
-    <div class="add-date" style="text-align:center; margin-top:2rem;">
+    <div class="section-cta">
       <button class="btn yes" id="openAddDate">+ Plan a Date</button>
     </div>
 
@@ -174,7 +197,7 @@
           <input type="text" id="dateLocation" placeholder="Where?">
           <input type="datetime-local" id="dateWhen" required>
           <textarea id="dateNotes" placeholder="Notes / what to bring"></textarea>
-          <button type="submit" class="btn yes">Save Date</button>
+          <button type="submit" class="btn yes wide">Save Date</button>
         </form>
       </div>
     </div>
@@ -185,7 +208,8 @@
 <section id="playlist" class="section">
   <div class="container">
     <header class="section-header">
-      <h2>Our Playlist 🎵</h2>
+      <span class="eyebrow">our sound 🎧</span>
+      <h2>Our Playlist</h2>
       <p>Songs that sound like us.</p>
     </header>
 
@@ -193,7 +217,7 @@
       <!-- Playlist injected by JS -->
     </div>
 
-    <div class="add-song" style="text-align:center; margin-top:2rem;">
+    <div class="section-cta">
       <button class="btn yes" id="openAddSong">+ Add a Song</button>
     </div>
 
@@ -206,7 +230,7 @@
           <input type="text" id="songArtist" placeholder="Artist" required>
           <input type="url" id="songLink" placeholder="Spotify / YouTube link (optional)">
           <textarea id="songWhy" placeholder="Why this song reminds you of them"></textarea>
-          <button type="submit" class="btn yes">Add Song</button>
+          <button type="submit" class="btn yes wide">Add Song</button>
         </form>
       </div>
     </div>
@@ -214,7 +238,8 @@
 </section>
 
 <footer>
-  <p>Made with ❤️ for you. Built with Vercel &amp; Supabase.</p>
+  <div class="footer-heart">💗</div>
+  <p>Made with <span class="footer-love">love</span> — just for you.</p>
 </footer>
 
 <script src="js/supabase.js"></script>
