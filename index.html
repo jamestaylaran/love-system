@@ -119,6 +119,7 @@
 
     <div class="section-cta">
       <button class="btn yes" id="openAddMemory">+ Add a Memory</button>
+      <button class="btn outline" id="selectMemories">☑ Select</button>
     </div>
 
     <!-- Add Memory Modal -->
@@ -164,6 +165,7 @@
 
     <div class="section-cta">
       <button class="btn yes" id="openAddNote">+ Write a Note</button>
+      <button class="btn outline" id="selectNotes">☑ Select</button>
     </div>
 
     <div class="modal" id="noteModal">
@@ -197,6 +199,7 @@
 
     <div class="section-cta">
       <button class="btn yes" id="openAddDate">+ Plan a Date</button>
+      <button class="btn outline" id="selectDates">☑ Select</button>
     </div>
 
     <div class="modal" id="dateModal">
@@ -230,6 +233,7 @@
 
     <div class="section-cta">
       <button class="btn yes" id="openAddSong">+ Add a Song</button>
+      <button class="btn outline" id="selectSongs">☑ Select</button>
     </div>
 
     <div class="modal" id="songModal">
@@ -252,6 +256,14 @@
   <div class="footer-heart">💗</div>
   <p>Made with <span class="footer-love">love</span> — just for you.</p>
 </footer>
+
+<!-- Floating action bar for multi-select delete -->
+<div class="multi-bar" id="multiBar">
+  <span class="multi-count" id="multiCount">0 selected</span>
+  <button type="button" class="btn outline small" id="multiAll">Select all</button>
+  <button type="button" class="btn yes small" id="multiDelete" disabled>Delete</button>
+  <button type="button" class="btn outline small" id="multiCancel">✕ Cancel</button>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>

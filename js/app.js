@@ -11,6 +11,7 @@ const navbar = document.getElementById('navbar');
 const footer = document.querySelector('footer');
 
 function showSection(id) {
+  exitSelectAll();
   sections.forEach(s => s.classList.remove('active'));
   const target = document.getElementById(id);
   if (target) target.classList.add('active');
@@ -396,19 +397,27 @@ async function insertRow(table, row) {
 }
 
 async function deleteRow(table, id) {
-  const ok = saveLocal(table, getLocal(table).filter(r => r.id !== id));
+  return deleteRows(table, [id]);
+}
+
+// Batch delete — one local write + one cloud request for many rows
+async function deleteRows(table, ids) {
+  if (!ids || !ids.length) return true;
+  const idSet = new Set(ids);
+  const ok = saveLocal(table, getLocal(table).filter(r => !idSet.has(r.id)));
   if (!ok) {
     toast('⚠️ Device storage is full — could not delete 😥');
-    return;
+    return false;
   }
   const cloud = getCloud();
-  if (!cloud) return;
+  if (!cloud) return true;
   try {
-    const { error } = await cloud.from(table).delete().eq('id', id);
+    const { error } = await cloud.from(table).delete().in('id', ids);
     if (error) console.error(error);
   } catch (e) {
     console.error(e);
   }
+  return true;
 }
 
 /* ---------- Memories ---------- */
@@ -734,6 +743,120 @@ songForm.addEventListener('submit', async (e) => {
   songForm.reset();
   songModal.classList.remove('open');
   loadSongs();
+});
+
+/* ---------- Multi-select delete (works on all 4 sections) ---------- */
+const multiBar = document.getElementById('multiBar');
+const multiCount = document.getElementById('multiCount');
+const multiDeleteBtn = document.getElementById('multiDelete');
+const multiAllBtn = document.getElementById('multiAll');
+const multiCancelBtn = document.getElementById('multiCancel');
+
+const selectConfigs = [
+  { btn: document.getElementById('selectMemories'), grid: memGrid, section: document.getElementById('memories'), table: 'memories', load: loadMemories, label: 'memories', delSel: '[data-del-memory]', delDs: 'delMemory', active: false, ids: new Set() },
+  { btn: document.getElementById('selectNotes'), grid: noteGrid, section: document.getElementById('notes'), table: 'love_notes', load: loadNotes, label: 'love notes', delSel: '[data-del-note]', delDs: 'delNote', active: false, ids: new Set() },
+  { btn: document.getElementById('selectDates'), grid: dateGrid, section: document.getElementById('dates'), table: 'dates', load: loadDates, label: 'date nights', delSel: '[data-del-date]', delDs: 'delDate', active: false, ids: new Set() },
+  { btn: document.getElementById('selectSongs'), grid: songGrid, section: document.getElementById('playlist'), table: 'songs', load: loadSongs, label: 'songs', delSel: '[data-del-song]', delDs: 'delSong', active: false, ids: new Set() },
+];
+
+function rowIdOf(cfg, card) {
+  const btn = card.querySelector(cfg.delSel);
+  return btn ? btn.dataset[cfg.delDs] : null;
+}
+
+function syncMultiBar() {
+  const cfg = selectConfigs.find(c => c.active);
+  if (!cfg) {
+    multiBar.classList.remove('show');
+    return;
+  }
+  const n = cfg.ids.size;
+  multiCount.textContent = n + ' selected';
+  multiDeleteBtn.disabled = n === 0;
+  multiDeleteBtn.textContent = n > 0 ? '🗑️ Delete ' + n : 'Delete';
+  multiBar.classList.add('show');
+}
+
+function exitSelect(cfg) {
+  cfg.active = false;
+  cfg.ids.clear();
+  cfg.section.classList.remove('select-mode');
+  cfg.grid.querySelectorAll('.card.selected').forEach(c => c.classList.remove('selected'));
+  cfg.btn.textContent = '☑ Select';
+  syncMultiBar();
+}
+
+function exitSelectAll() {
+  selectConfigs.forEach(c => { if (c.active) exitSelect(c); });
+}
+
+function enterSelect(cfg) {
+  exitSelectAll();
+  cfg.active = true;
+  cfg.section.classList.add('select-mode');
+  cfg.btn.textContent = '✕ Cancel';
+  syncMultiBar();
+}
+
+selectConfigs.forEach(cfg => {
+  cfg.btn.addEventListener('click', () => {
+    if (cfg.active) exitSelect(cfg);
+    else enterSelect(cfg);
+  });
+
+  // In select mode, clicking a card toggles its selection
+  cfg.grid.addEventListener('click', (e) => {
+    if (!cfg.active) return;
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const id = rowIdOf(cfg, card);
+    if (!id) return;
+    if (cfg.ids.has(id)) {
+      cfg.ids.delete(id);
+      card.classList.remove('selected');
+    } else {
+      cfg.ids.add(id);
+      card.classList.add('selected');
+    }
+    syncMultiBar();
+  });
+});
+
+multiAllBtn.addEventListener('click', () => {
+  const cfg = selectConfigs.find(c => c.active);
+  if (!cfg) return;
+  const cards = Array.from(cfg.grid.querySelectorAll('.card'));
+  const allSelected = cards.length > 0 && cards.every(c => cfg.ids.has(rowIdOf(cfg, c)));
+  cards.forEach(c => {
+    const id = rowIdOf(cfg, c);
+    if (!id) return;
+    if (allSelected) {
+      cfg.ids.delete(id);
+      c.classList.remove('selected');
+    } else {
+      cfg.ids.add(id);
+      c.classList.add('selected');
+    }
+  });
+  syncMultiBar();
+});
+
+multiCancelBtn.addEventListener('click', () => {
+  const cfg = selectConfigs.find(c => c.active);
+  if (cfg) exitSelect(cfg);
+});
+
+multiDeleteBtn.addEventListener('click', async () => {
+  const cfg = selectConfigs.find(c => c.active);
+  if (!cfg || !cfg.ids.size) return;
+  const n = cfg.ids.size;
+  if (!confirm('Delete ' + n + ' ' + cfg.label + "? This can't be undone.")) return;
+  const ids = Array.from(cfg.ids);
+  const ok = await deleteRows(cfg.table, ids);
+  if (!ok) return; // storage error toast already shown — keep their selection
+  exitSelect(cfg);
+  await cfg.load();
+  toast('🗑️ Deleted ' + n + ' ' + cfg.label);
 });
 
 /* ---------- Utilities ---------- */
